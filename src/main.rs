@@ -2,6 +2,8 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+pub mod lexer;
+
 fn file2str(filename: &str) -> String {
     let path = Path::new(filename);
     let mut file = match File::open(path) {
@@ -18,9 +20,10 @@ fn file2str(filename: &str) -> String {
 
 fn main() {
     let text = file2str("./test.txt");
-    let lines = text.split("\n");
 
-    for line in lines {
-        println!("{}", line);
+    let mut t = lexer::Lexer::new(text);
+    t.run_lexer();
+    for tok in t.tokens {
+        tok.print();
     }
 }
