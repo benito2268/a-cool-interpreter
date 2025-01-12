@@ -1,0 +1,6 @@
+// this is a function
+func main(param) {
+    print a;
+    let ret = param / 5;
+    return ret;
+}
