@@ -1,15 +1,6 @@
-let a = "hello world";
-// this is a comment
-print a;
-
-let x = 0;
-while x <= 5 {
-    print x;
-    x = x + 1;
-}
-
 // this is a function
-func foo(param) {
+func main(param) {
+    print a;
     let ret = param / 5;
     return ret;
 }

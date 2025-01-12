@@ -1,9 +1,10 @@
 use std::process;
 
 pub mod token;
+pub mod literal;
 
 pub struct Lexer {
-    pub tokens: Vec<Box<dyn token::Token>>,
+    pub tokens: Vec<token::Token>,
     source: String,
     curr: usize,
     start: usize,
@@ -29,7 +30,7 @@ impl Lexer {
             self.next();
         }
 
-        self.add_token(token::TokenType::EOF, None::<i32>);
+        self.add_token(token::TokenType::EOF, None);
     }
 
     // returns the next token in source code
@@ -45,42 +46,42 @@ impl Lexer {
         //match operators and one char tokens
         //should probably add a error clause for illegal tokens
         match c {
-            ';'  => self.add_token(token::TokenType::SEMICOL, None::<i32>),
-            '+'  => self.add_token(token::TokenType::PLUS, None::<i32>),
-            '-'  => self.add_token(token::TokenType::MINUS, None::<i32>),
-            '*'  => self.add_token(token::TokenType::MULT, None::<i32>),
-            '{'  => self.add_token(token::TokenType::LBRACK, None::<i32>),
-            '}'  => self.add_token(token::TokenType::RBRACK, None::<i32>),
-            '('  => self.add_token(token::TokenType::LPAREN, None::<i32>),
-            ')'  => self.add_token(token::TokenType::RPAREN, None::<i32>),
+            ';'  => self.add_token(token::TokenType::SEMICOL, None),
+            '+'  => self.add_token(token::TokenType::PLUS, None),
+            '-'  => self.add_token(token::TokenType::MINUS, None),
+            '*'  => self.add_token(token::TokenType::MULT, None),
+            '{'  => self.add_token(token::TokenType::LBRACK, None),
+            '}'  => self.add_token(token::TokenType::RBRACK, None),
+            '('  => self.add_token(token::TokenType::LPAREN, None),
+            ')'  => self.add_token(token::TokenType::RPAREN, None),
             '"'  => self.string(),
             '\n' => self.line += 1,
             ' ' | '\r' |'\t' => (),
             '='  => {
                 if self.expect('=') {
-                    self.add_token(token::TokenType::EQUAL, None::<i32>);
+                    self.add_token(token::TokenType::EQUAL, None);
                     self.next_char();
                 }
                 else {
-                    self.add_token(token::TokenType::ASSIGN, None::<i32>);
+                    self.add_token(token::TokenType::ASSIGN, None);
                 }
             },
             '>'  => {
                 if self.expect('=') {
-                    self.add_token(token::TokenType::GREATEQ, None::<i32>);
+                    self.add_token(token::TokenType::GREATEQ, None);
                     self.next_char();
                 }
                 else {
-                    self.add_token(token::TokenType::GREATER, None::<i32>);
+                    self.add_token(token::TokenType::GREATER, None);
                 }
             },
             '<'  => {
                 if self.expect('=') {
-                    self.add_token(token::TokenType::LESSEQ, None::<i32>);
+                    self.add_token(token::TokenType::LESSEQ, None);
                     self.next_char();
                 }
                 else {
-                    self.add_token(token::TokenType::LESS, None::<i32>);
+                    self.add_token(token::TokenType::LESS, None);
                 }
             },
             '/' => {
@@ -91,7 +92,7 @@ impl Lexer {
                     self.line += 1;
                 }
                 else {
-                    self.add_token(token::TokenType::DIV, None::<i32>);
+                    self.add_token(token::TokenType::DIV, None);
                 }
             },
             _ => {
@@ -108,17 +109,11 @@ impl Lexer {
         }
     }
 
-    fn add_token<T>(&mut self, toktype: token::TokenType, literal: Option<T>)
-    where
-        T: 'static,
-    {
+    fn add_token(&mut self, toktype: token::TokenType, literal: Option<literal::Literal>) {
         let tokstr = &self.source[self.start..self.curr];
     
         self.tokens.push(
-            match literal {
-                Some(literal) => Box::new(token::LiteralToken::new(toktype, tokstr.to_string(), self.line, literal)),
-                None => Box::new(token::RegToken::new(toktype, tokstr.to_string(), self.line)),
-            },
+            token::Token::new(toktype, tokstr.to_string(), self.line, literal)
         );
     }
     
@@ -156,7 +151,7 @@ impl Lexer {
             None => token::TokenType::IDENT,
         };
 
-        self.add_token(toktype, None::<i32>);
+        self.add_token(toktype, Some(literal::Literal::Ident { val: tokstr.to_string() }));
     }
 
     fn number(&mut self) {
@@ -177,11 +172,11 @@ impl Lexer {
 
         if is_f64 {
             let float = String::from(tokstr).parse::<f64>().unwrap();
-            self.add_token(token::TokenType::LITERAL, Some(float));
+            self.add_token(token::TokenType::LITERAL, Some(literal::Literal::Float { val: float }));
         }
         else {
             let int = String::from(tokstr).parse::<i32>().unwrap();
-            self.add_token(token::TokenType::LITERAL, Some(int));
+            self.add_token(token::TokenType::LITERAL, Some(literal::Literal::Int { val: int }));
         }
     }
 
@@ -202,7 +197,7 @@ impl Lexer {
         self.next_char();
 
         let tokstr: &str = &self.source[(self.start + 1)..(self.curr - 1)];
-        self.add_token(token::TokenType::LITERAL, Some(tokstr.to_string()));
+        self.add_token(token::TokenType::LITERAL, Some(literal::Literal::String { val: tokstr.to_string() }));
     }
 
     fn error(&self, message: &str) {

@@ -3,6 +3,7 @@ use std::io::Read;
 use std::path::Path;
 
 pub mod lexer;
+pub mod parser;
 
 fn file2str(filename: &str) -> String {
     let path = Path::new(filename);
@@ -22,8 +23,13 @@ fn main() {
     let text = file2str("./test.txt");
 
     let mut t = lexer::Lexer::new(text);
+
     t.run_lexer();
+
     for tok in t.tokens {
         tok.print();
     }
+
+    println!("got here");
+
 }

@@ -1,3 +1,5 @@
+use crate::lexer::literal;
+
 #[derive(Debug)]
 pub enum TokenType {
     LET, PRINT, TRUE, FALSE, IF, ELSE, ELIF,
@@ -11,47 +13,29 @@ pub enum TokenType {
     IDENT, LITERAL, SEMICOL, EOF,
 }
 
-pub trait Token { 
-    fn print(&self);
-}
-
-pub struct RegToken {
+pub struct Token {
     toktype: TokenType,
     lexeme: String,
     line: usize,
+    literal: Option<literal::Literal>,
 }
 
-pub struct LiteralToken<T> {
-    token: RegToken,
-    literal: T,
-}
-
-impl RegToken {
-    pub fn new(toktype: TokenType, lexeme: String, line: usize) -> Self {
+impl Token {
+    pub fn new(toktype: TokenType, lexeme: String, line: usize, literal: Option<literal::Literal>) -> Self {
         Self {
             toktype,
             lexeme,
             line,
-        }
-    }
-}
-
-impl<T> LiteralToken<T> {
-    pub fn new(toktype: TokenType, lexeme: String, line: usize, literal: T) -> Self {
-        Self {
-            token: RegToken::new(toktype, lexeme, line),
             literal,
         }
     }
 }
 
-impl Token for RegToken { 
-    fn print(&self) {
-        println!("{:?}", self.toktype);
-    }
-}
-impl<T> Token for LiteralToken<T> { 
-    fn print(&self) {
-        println!("{:?}", self.token.toktype);
+impl Token {
+    pub fn print(&self) {
+        match &self.literal {
+            Some(literal) => println!("{:?} : {}", self.toktype, literal),
+            None => println!("{:?}", self.toktype),
+        }
     }
 }
